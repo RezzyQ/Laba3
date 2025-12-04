@@ -18,7 +18,7 @@ struct TestCase {
 void RunComprehensiveTests() {
     setlocale(LC_ALL, "ru_RU.UTF-8");
     
-    wcout << L"=== ПОЛНОЕ ТЕСТИРОВАНИЕ ШИФРА МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << endl;
+    wcout << L"=== ПОЛНОЕ ТЕСТИРОВАНИЕ ШИФРА МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << endl << endl;
     
     // Тесты конструктора
     vector<TestCase> constructorTests = {
@@ -29,38 +29,38 @@ void RunComprehensiveTests() {
         {15, L"Нулевой ключ", 0, L"ПРИВЕТ МИР", L"", true}
     };
     
-    // Тесты шифрования с исправленными ожидаемыми результатами
+    // Тесты шифрования - исправлены ожидаемые результаты
     vector<TestCase> encryptTests = {
         {21, L"Строка из прописных", 3, L"ПРИВЕТМИР", L"ИТРРЕИПВМ", false},
         {22, L"Строка из строчных", 3, L"приветмир", L"ИТРРЕИПВМ", false},
         {23, L"Тест с пробелами", 3, L"ПРИВЕТ МИР", L"ИТРРЕИПВМ", false},
-        {24, L"Строка с цифрами", 3, L"ПРИВЕТ2024", L"ИТРЕЛВ", false}, // Изменено: цифры удаляются
-        {25, L"Тест без букв", 3, L"1234", L"", true}, // Пустая строка после удаления цифр
+        {24, L"Строка с цифрами", 3, L"ПРИВЕТ2024", L"ИТРЕЛВ", false},
+        {25, L"Тест без букв", 3, L"1234", L"", true},
         {26, L"Пустая строка", 3, L"", L"", true},
         {27, L"Ключ равен 1", 1, L"ПРИВЕТМИР", L"ПРИВЕТМИР", false},
         {28, L"Тест с знаками препинания", 3, L"ПРИВЕТ,МИР", L"ИТРРЕИПВМ", false},
-        {29, L"Некратный ключ", 4, L"АБВГД", L"ГВБАД", false}, // Ожидается по таблице
+        {29, L"Некратный ключ", 4, L"АБВГД", L"ГВБАД", false},
         {210, L"Короткий текст", 3, L"А", L"А", false}
     };
     
     // Тесты расшифрования
     vector<TestCase> decryptTests = {
         {31, L"Строка из прописных", 3, L"ИТРРЕИПВМ", L"ПРИВЕТМИР", false},
-        {32, L"Строка из строчных", 3, L"итереипвм", L"", true}, // Строчные не допускаются
+        {32, L"Строка из строчных", 3, L"итереипвм", L"", true},
         {33, L"Тест с пробелами", 3, L"ИТР РЕИ ПВМ", L"", true},
         {34, L"Строка с цифрами", 3, L"ИТРРЕИПВМ2024", L"", true},
         {35, L"Тест без букв", 3, L"1234", L"", true},
         {36, L"Пустая строка", 3, L"", L"", true},
         {37, L"Ключ равен 1", 1, L"ПРИВЕТМИР", L"ПРИВЕТМИР", false},
         {38, L"Тест с знаками препинания", 3, L"ПРИВЕТ,МИР", L"", true},
-        {39, L"Некратный ключ", 4, L"ГВБАД", L"АБВГД", false}, // Соответствует таблице
+        {39, L"Некратный ключ", 4, L"ГВБАД", L"АБВГД", false},
         {310, L"Короткая строка", 3, L"А", L"А", false}
     };
     
     int totalTests = constructorTests.size() + encryptTests.size() + decryptTests.size();
     int passedTests = 0;
     
-    wcout << L"\n=== ТЕСТИРОВАНИЕ КОНСТРУКТОРА ===" << endl;
+    wcout << L"=== ТЕСТИРОВАНИЕ КОНСТРУКТОРА ===" << endl;
     for (const auto& test : constructorTests) {
         wcout << L"Тест " << test.testNumber << L": " << test.description << L" - ";
         
@@ -68,29 +68,29 @@ void RunComprehensiveTests() {
             RouteCipher cipher(test.key);
             
             if (!test.shouldThrow) {
-                wcout << L"✅ УСПЕХ" << endl;
+                wcout << L"УСПЕХ" << endl;
                 passedTests++;
             } else {
-                wcout << L"❌ ОШИБКА: ожидалось исключение" << endl;
+                wcout << L"ОШИБКА: ожидалось исключение" << endl;
             }
         } catch (const CipherError&) {
             if (test.shouldThrow) {
-                wcout << L"✅ УСПЕХ (исключение получено)" << endl;
+                wcout << L"УСПЕХ (исключение получено)" << endl;
                 passedTests++;
             } else {
-                wcout << L"❌ ОШИБКА: неожиданное исключение" << endl;
+                wcout << L"ОШИБКА: неожиданное исключение" << endl;
             }
         } catch (...) {
             if (test.shouldThrow) {
-                wcout << L"✅ УСПЕХ (исключение получено)" << endl;
+                wcout << L"УСПЕХ (исключение получено)" << endl;
                 passedTests++;
             } else {
-                wcout << L"❌ ОШИБКА: неизвестное исключение" << endl;
+                wcout << L"ОШИБКА: неизвестное исключение" << endl;
             }
         }
     }
     
-    wcout << L"\n=== ТЕСТИРОВАНИЕ ШИФРОВАНИЯ ===" << endl;
+    wcout << endl << L"=== ТЕСТИРОВАНИЕ ШИФРОВАНИЯ ===" << endl;
     for (const auto& test : encryptTests) {
         wcout << L"Тест " << test.testNumber << L": " << test.description << L" - ";
         
@@ -100,33 +100,33 @@ void RunComprehensiveTests() {
             
             if (!test.shouldThrow) {
                 if (result == test.expected) {
-                    wcout << L"✅ УСПЕХ: " << result << endl;
+                    wcout << L"УСПЕХ: " << result << endl;
                     passedTests++;
                 } else {
-                    wcout << L"❌ ОШИБКА: ожидалось '" << test.expected 
+                    wcout << L"ОШИБКА: ожидалось '" << test.expected 
                           << L"', получено '" << result << L"'" << endl;
                 }
             } else {
-                wcout << L"❌ ОШИБКА: ожидалось исключение, получен результат: " << result << endl;
+                wcout << L"ОШИБКА: ожидалось исключение, получен результат: " << result << endl;
             }
         } catch (const CipherError& e) {
             if (test.shouldThrow) {
-                wcout << L"✅ УСПЕХ (исключение получено): " << e.what() << endl;
+                wcout << L"УСПЕХ (исключение получено)" << endl;
                 passedTests++;
             } else {
-                wcout << L"❌ ОШИБКА: неожиданное исключение: " << e.what() << endl;
+                wcout << L"ОШИБКА: неожиданное исключение" << endl;
             }
         } catch (...) {
             if (test.shouldThrow) {
-                wcout << L"✅ УСПЕХ (исключение получено)" << endl;
+                wcout << L"УСПЕХ (исключение получено)" << endl;
                 passedTests++;
             } else {
-                wcout << L"❌ ОШИБКА: неизвестное исключение" << endl;
+                wcout << L"ОШИБКА: неизвестное исключение" << endl;
             }
         }
     }
     
-    wcout << L"\n=== ТЕСТИРОВАНИЕ РАСШИФРОВАНИЯ ===" << endl;
+    wcout << endl << L"=== ТЕСТИРОВАНИЕ РАСШИФРОВАНИЯ ===" << endl;
     for (const auto& test : decryptTests) {
         wcout << L"Тест " << test.testNumber << L": " << test.description << L" - ";
         
@@ -136,42 +136,42 @@ void RunComprehensiveTests() {
             
             if (!test.shouldThrow) {
                 if (result == test.expected) {
-                    wcout << L"✅ УСПЕХ: " << result << endl;
+                    wcout << L"УСПЕХ: " << result << endl;
                     passedTests++;
                 } else {
-                    wcout << L"❌ ОШИБКА: ожидалось '" << test.expected 
+                    wcout << L"ОШИБКА: ожидалось '" << test.expected 
                           << L"', получено '" << result << L"'" << endl;
                 }
             } else {
-                wcout << L"❌ ОШИБКА: ожидалось исключение, получен результат: " << result << endl;
+                wcout << L"ОШИБКА: ожидалось исключение, получен результат: " << result << endl;
             }
         } catch (const CipherError& e) {
             if (test.shouldThrow) {
-                wcout << L"✅ УСПЕХ (исключение получено): " << e.what() << endl;
+                wcout << L"УСПЕХ (исключение получено)" << endl;
                 passedTests++;
             } else {
-                wcout << L"❌ ОШИБКА: неожиданное исключение: " << e.what() << endl;
+                wcout << L"ОШИБКА: неожиданное исключение" << endl;
             }
         } catch (...) {
             if (test.shouldThrow) {
-                wcout << L"✅ УСПЕХ (исключение получено)" << endl;
+                wcout << L"УСПЕХ (исключение получено)" << endl;
                 passedTests++;
             } else {
-                wcout << L"❌ ОШИБКА: неизвестное исключение" << endl;
+                wcout << L"ОШИБКА: неизвестное исключение" << endl;
             }
         }
     }
     
-    wcout << L"\n=== ИТОГОВЫЕ РЕЗУЛЬТАТЫ ===" << endl;
+    wcout << endl << L"=== ИТОГОВЫЕ РЕЗУЛЬТАТЫ ===" << endl;
     wcout << L"Всего тестов: " << totalTests << endl;
     wcout << L"Пройдено: " << passedTests << endl;
     wcout << L"Не пройдено: " << (totalTests - passedTests) << endl;
     wcout << L"Успешность: " << (passedTests * 100.0 / totalTests) << L"%" << endl;
     
     if (passedTests == totalTests) {
-        wcout << L"\n✅ ВСЕ " << totalTests << L" ТЕСТОВ ПРОЙДЕНЫ УСПЕШНО!" << endl;
+        wcout << endl << L"ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!" << endl;
     } else {
-        wcout << L"\n❌ НЕКОТОРЫЕ ТЕСТЫ НЕ ПРОЙДЕНЫ" << endl;
+        wcout << endl << L"НЕКОТОРЫЕ ТЕСТЫ НЕ ПРОЙДЕНЫ" << endl;
     }
 }
 
