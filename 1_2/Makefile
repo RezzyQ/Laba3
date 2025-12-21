@@ -1,34 +1,23 @@
-CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra
-LDFLAGS = 
+.PHONY: all debug release clean
 
-TARGET = route_cipher
-TEST_TARGET = test_route_cipher
+Compiler = g++
+RELEASE_FLAGS = -O2 -Wall -DNDEBUG -Iheaders 
+DEBUG_FLAGS   = -g -O0 -Wall -Iheaders
+RELEASE_EXEC  = labsecond
+DEBUG_EXEC    = labsecond-dbg -lUnitTest++
+SOURCES       = main.cpp Cipher.cpp
+Libary        = -lUnitTest++
+all: debug release
 
-all: $(TARGET) $(TEST_TARGET)
+debug: $(DEBUG_EXEC)
 
-$(TARGET): main.o RouteCipher.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+$(DEBUG_EXEC): $(SOURCES)
+	$(Compiler) $(DEBUG_FLAGS) $(SOURCES) -o $(DEBUG_EXEC) $(Libary)
 
-$(TEST_TARGET): test_RouteCipher_quick.o RouteCipher.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+release: $(RELEASE_EXEC)
 
-main.o: main.cpp RouteCipher.h
-	$(CXX) $(CXXFLAGS) -c main.cpp
-
-RouteCipher.o: RouteCipher.cpp RouteCipher.h
-	$(CXX) $(CXXFLAGS) -c RouteCipher.cpp
-
-test_RouteCipher_quick.o: test_RouteCipher_quick.cpp RouteCipher.h
-	$(CXX) $(CXXFLAGS) -c test_RouteCipher_quick.cpp
+$(RELEASE_EXEC): $(SOURCES)
+	$(Compiler) $(RELEASE_FLAGS) $(SOURCES) -o $(RELEASE_EXEC) $(Libary)
 
 clean:
-	rm -f $(TARGET) $(TEST_TARGET) *.o
-
-run: $(TARGET)
-	./$(TARGET)
-
-test: $(TEST_TARGET)
-	./$(TEST_TARGET)
-
-.PHONY: all clean run test
+	rm -f $(RELEASE_EXEC) $(DEBUG_EXEC)
