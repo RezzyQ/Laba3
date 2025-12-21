@@ -1,145 +1,105 @@
 #include "modAlphaCipher.h"
+#include <locale>
+#include <codecvt>
 #include <stdexcept>
-#include <algorithm>
 
-std::string modAlphaCipher::removeSpaces(const std::string& s) const
-{
-    std::string result;
-    for (char c : s) {
-        if (c != ' ') {
-            result += c;
-        }
+locale loc("ru_RU.UTF-8");
+
+wstring_convert<codecvt_utf8<wchar_t>, wchar_t> codec;
+
+modAlphaCipher::modAlphaCipher(const string& skey) {
+    for (unsigned i = 0; i < numAlpha.size(); i++)
+        alphaNum[numAlpha[i]] = i;
+    key = convert(getValidKey(skey));
+
+    // Check for weak key
+    int n = 0;
+    for (auto e : key) {
+        if (e == 0)
+            n++;
     }
+    if (2 * n > key.size())
+        throw cipher_error("WeakKey");
+}
+
+string modAlphaCipher::encrypt(const string& open_text) {
+    vector<int> work = convert(getValidOpenText(open_text));
+    for(unsigned i = 0; i < work.size(); i++)
+        work[i] = (work[i] + key[i % key.size()]) % alphaNum.size();
+    return convert(work);
+}
+
+string modAlphaCipher::decrypt(const string& cipher_text) {
+    vector<int> work = convert(getValidCipherText(cipher_text));
+    for(unsigned i = 0; i < work.size(); i++)
+        work[i] = (work[i] + alphaNum.size() - key[i % key.size()]) % alphaNum.size();
+    return convert(work);
+}
+
+inline vector<int> modAlphaCipher::convert(const string& s) {
+    wstring ws = codec.from_bytes(s);
+    vector<int> result;
+    for(auto c:ws)
+        result.push_back(alphaNum[c]);
     return result;
 }
 
-void modAlphaCipher::validateKey(const std::vector<int>& key) const
-{
-    if (key.empty()) {
-        throw cipher_error("Empty key provided");
-    }
-    
-    for (int k : key) {
-        if (k < 0 || k >= static_cast<int>(numAlpha.size() / 2)) {
-            throw cipher_error("Invalid key value - out of alphabet range");
-        }
-    }
-}
-
-void modAlphaCipher::validateText(const std::string& text) const
-{
-    if (text.empty()) {
-        throw cipher_error("Empty text provided");
-    }
-    
-    if (text.length() % 2 != 0) {
-        throw cipher_error("Invalid text length - must be even for UTF-8 Russian characters");
-    }
-}
-
-std::vector<int> modAlphaCipher::textToIndices(const std::string& text) const
-{
-    validateText(text);
-    
-    std::vector<int> indices;
-    size_t i = 0;
-    while (i < text.size()) {
-        if (i + 1 >= text.size()) {
-            throw cipher_error("Incomplete character at the end of text");
-        }
-        
-        std::string letter = text.substr(i, 2);
-
-        bool found = false;
-        for (size_t pos = 0; pos < numAlpha.size(); pos += 2) {
-            if (numAlpha.substr(pos, 2) == letter) {
-                indices.push_back(static_cast<int>(pos / 2));
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            throw cipher_error("Invalid character in input: '" + letter + "' (not a Russian uppercase letter)");
-        }
-
-        i += 2;
-    }
-
-    if (indices.empty()) {
-        throw cipher_error("Empty text after processing");
-    }
-
-    return indices;
-}
-
-std::string modAlphaCipher::indicesToText(const std::vector<int>& indices) const
-{
-    if (indices.empty()) {
-        throw cipher_error("Cannot convert empty indices to text");
-    }
-    
-    std::string result;
-    for (int idx : indices) {
-        if (idx < 0 || idx >= static_cast<int>(numAlpha.size() / 2)) {
-            throw cipher_error("Index out of range in indicesToText: " + std::to_string(idx));
-        }
-        result += numAlpha.substr(idx * 2, 2);
-    }
+inline string modAlphaCipher::convert(const vector<int>& v) {
+    string result;
+    wstring ws;
+    for(auto i:v)
+        ws.push_back(numAlpha[i]);
+    result = codec.to_bytes(ws);
     return result;
 }
 
-modAlphaCipher::modAlphaCipher(const std::string& skey)
-{
-    if (skey.empty()) {
-        throw cipher_error("Key cannot be empty");
+inline string modAlphaCipher::getValidKey(const string & s) {
+    wstring ws = codec.from_bytes(s);
+    string mp;
+    wstring tmp = codec.from_bytes(mp);
+    tmp = ws;
+    if (tmp.empty())
+        throw cipher_error("Пустой ключ");
+    int razmer = tmp.size();
+    for (int i = 0; i < razmer; i++) {
+        if(tmp[i] < L'А' || tmp[i] > L'я')
+            throw cipher_error(string ("Неверный ключ: ") + s);
+        if (tmp[i] >= L'а' && tmp[i] <= L'я')
+            tmp[i] -= 32;
     }
-    
-    std::string cleanKey = removeSpaces(skey);
-    if (cleanKey.empty()) {
-        throw cipher_error("Key contains only spaces");
-    }
-    
-    key = textToIndices(cleanKey);
-    validateKey(key);
+    mp = codec.to_bytes(tmp);
+    return mp;
 }
 
-std::string modAlphaCipher::encrypt(const std::string& open_text)
-{
-    if (open_text.empty()) {
-        throw cipher_error("Cannot encrypt empty text");
+inline string modAlphaCipher::getValidOpenText(const string & s) {
+    string mp;
+    wstring tmp = codec.from_bytes(mp);
+    wstring ws = codec.from_bytes(s);
+    for (auto c:ws) {
+        if (c >= L'А' && c <= L'я') {
+            if (c >= L'а' && c <= L'я')
+                tmp.push_back(c -= 32);
+            else
+                tmp.push_back(c);
+        }
     }
-    
-    std::string cleanText = removeSpaces(open_text);
-    if (cleanText.empty()) {
-        throw cipher_error("Text contains only spaces");
-    }
-    
-    std::vector<int> work = textToIndices(cleanText);
-    int alphabetSize = static_cast<int>(numAlpha.size() / 2);
-
-    for (size_t i = 0; i < work.size(); ++i) {
-        work[i] = (work[i] + key[i % key.size()]) % alphabetSize;
-    }
-    return indicesToText(work);
+    if (tmp.empty())
+        throw cipher_error("Отсутствует открытый текст!"); 
+    mp = codec.to_bytes(tmp);
+    return mp;
 }
 
-std::string modAlphaCipher::decrypt(const std::string& cipher_text)
-{
-    if (cipher_text.empty()) {
-        throw cipher_error("Cannot decrypt empty text");
+inline string modAlphaCipher::getValidCipherText(const string & s) {
+    string mp;
+    wstring tmp = codec.from_bytes(mp);
+    wstring ws = codec.from_bytes(s);
+    tmp = ws;
+    if (tmp.empty())
+        throw cipher_error("Empty cipher text");
+    for (auto c:tmp) {
+        if ((c < L'А' || c > L'Я') && c != L'Ё')
+            throw cipher_error(string("Неправильный зашифрованный текст ")+s);
     }
-    
-    std::string cleanText = removeSpaces(cipher_text);
-    if (cleanText.empty()) {
-        throw cipher_error("Cipher text contains only spaces");
-    }
-    
-    std::vector<int> work = textToIndices(cleanText);
-    int alphabetSize = static_cast<int>(numAlpha.size() / 2);
-
-    for (size_t i = 0; i < work.size(); ++i) {
-        work[i] = (work[i] - key[i % key.size()] + alphabetSize) % alphabetSize;
-    }
-    return indicesToText(work);
+    mp = codec.to_bytes(tmp);
+    return mp;
 }
