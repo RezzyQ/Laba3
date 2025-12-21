@@ -1,82 +1,79 @@
+#include <UnitTest++/UnitTest++.h>
 #include <iostream>
-#include <string>
+#include "Cipher.h"
 #include <locale>
-#include "RouteCipher.h"
+#include <codecvt>
+
 
 using namespace std;
-
-void ShowMenu() {
-    wcout << L"\n=== Шифр Маршрутной Перестановки ===" << endl;
-    wcout << L"1. Зашифровать текст" << endl;
-    wcout << L"2. Расшифровать текст" << endl;
-    wcout << L"3. Выйти" << endl;
-    wcout << L"Выберите операцию: ";
+string wst (int k, wstring s1)
+{
+    Cipher w(k);
+    wstring s=w.Coder(w, s1);
+    const string s2 (s.begin(), s.end() );
+    return s2;
 }
-
-int main() {
-    setlocale(LC_ALL, "ru_RU.UTF-8");
-    
-    wcout << L"=== Система Шифрования Маршрутной Перестановки ===" << endl;
-    wcout << L"Автоматически удаляются: пробелы, знаки препинания, цифры" << endl;
-    
-    
-    try {
-        int Key;
-        wcout << L"\nВведите ключ (количество столбцов): ";
-        wcin >> Key;
-        wcin.ignore();
-        
-        RouteCipher Cipher(Key);
-        wcout << L"Шифр инициализирован с ключом: " << Key << endl;
-        
-        int Choice;
-        wstring Text;
-        
-        do {
-            ShowMenu();
-            wcin >> Choice;
-            wcin.ignore();
-            
-            switch (Choice) {
-                case 1: {
-                    wcout << L"Введите текст для шифрования: ";
-                    getline(wcin, Text);
-                    
-                    try {
-                        wstring Encrypted = Cipher.Encrypt(Text);
-                        wcout << L"Зашифрованный текст: " << Encrypted << endl;
-                    } catch (const CipherError& e) {
-                        wcout << L"Ошибка при шифровании: " << e.what() << endl;
-                    }
-                    break;
-                }
-                case 2: {
-                    wcout << L"Введите текст для расшифрования: ";
-                    getline(wcin, Text);
-                    
-                    try {
-                        wstring Decrypted = Cipher.Decrypt(Text);
-                        wcout << L"Расшифрованный текст: " << Decrypted << endl;
-                    } catch (const CipherError& e) {
-                        wcout << L"Ошибка при расшифровании: " << e.what() << endl;
-                    }
-                    break;
-                }
-                case 3:
-                    wcout << L"Выход из программы." << endl;
-                    break;
-                default:
-                    wcout << L"Неверный выбор. Попробуйте снова." << endl;
-            }
-        } while (Choice != 3);
-        
-    } catch (const CipherError& e) {
-        wcout << L"Ошибка инициализации шифра: " << e.what() << endl;
-        return 1;
-    } catch (const exception& e) {
-        wcout << L"Неожиданная ошибка: " << e.what() << endl;
-        return 1;
+string wst1 (int k, wstring s1)
+{
+    Cipher w(k);
+    wstring s=w.Decoder(k, s1);
+    const string s2 (s.begin(), s.end() );
+    return s2;
+}
+    wstring test = L"HELLOPARNIDAROVA";
+    int k;
+    SUITE (ERRORS)
+{
+    TEST(EmptyKey) {
+        CHECK_THROW(wst(k=0,test), cipher_error);
     }
-    
-    return 0;
+    TEST(NegativeKey) {
+        CHECK_THROW(wst(k=-5,test), cipher_error);
+    }
+    TEST(LargeKey) {
+        CHECK_THROW(wst(k=55,test), cipher_error);
+    }
+    TEST(EmptyText) {
+        CHECK_THROW(wst(8,L" "),cipher_error);
+    }
+    TEST(ValiDTextWithoutletters) {
+        CHECK_THROW(wst(8,L"/,.123"),cipher_error);
+    }
+    TEST(EmptyTEXT) {
+        CHECK_THROW(wst1(8,L" "),cipher_error);
+    }
+}
+SUITE (PROVERKI)
+{
+    TEST(ValidText) {
+        CHECK_EQUAL(wst(8,L"HELLOPARNIDAROVA"),"HNEILDLAORPOAVRA");
+    }
+    TEST(LowText) {
+        CHECK_EQUAL(wst(8,L"HELLOparniDAROVA"),"HNEILDLAORPOAVRA");
+    }
+    TEST(SpaceText) {
+        CHECK_EQUAL(wst(8,L"HELLO PARNI DAROVA"),"HNEILDLAORPOAVRA");
+    }
+    TEST(TextWithNumber) {
+        CHECK_EQUAL(wst(8,L"HELLOPARNID123123AROVA"),"HNEILDLAORPOAVRA");
+    }
+    TEST(ValidTEXTo) {
+        CHECK_EQUAL(wst1(8,L"HNEILDLAORPOAVRA"),"HELLOPARNIDAROVA");
+    }
+    TEST(LowTEXTo) {
+        CHECK_EQUAL(wst1(8,L"HNEILDlaorPOAVRA"),"HELLOPARNIDAROVA");
+    }
+    TEST(SpaceTEXTo) {
+        CHECK_EQUAL(wst1(8,L"HNEILDL AORPOAVRA"),"HELLOPARNIDAROVA");
+    }
+    TEST(TextNumberTexto) {
+        CHECK_EQUAL(wst1(8,L"HNEILDLA123ORPOAVRA"),"HELLOPARNIDAROVA");
+    }
+    TEST(TextSymbolTexto) {
+        CHECK_EQUAL(wst1(8,L"HNEILDLAOR..POAVRA"),"HELLOPARNIDAROVA");
+    }
+}
+int main(int argc, char **argv)
+{ 
+    return UnitTest::RunAllTests();
 }
